@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SwineTrack – Mobile App</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green-50: #f0f9ec;
+    --green-100: #d4edca;
+    --green-200: #a8d994;
+    --green-400: #6ab04c;
+    --green-600: #3e7d2b;
+    --green-800: #234a18;
+    --green-900: #122a0d;
+    --amber-50: #fef8ec;
+    --amber-100: #fde9b4;
+    --amber-200: #fbd06b;
+    --amber-400: #f5a623;
+    --amber-600: #c47d0a;
+    --amber-800: #7a4c04;
+    --brown-50: #fdf6ef;
+    --brown-100: #f5e0c7;
+    --brown-400: #c49264;
+    --brown-600: #8b5e3c;
+    --brown-800: #4d3220;
+    --red-100: #fde8e8;
+    --red-400: #e85555;
+    --red-600: #b83535;
+    --blue-100: #e4f0fb;
+    --blue-400: #4a9de0;
+    --blue-600: #2471b8;
+    --gray-50: #f7f5f2;
+    --gray-100: #ede9e3;
+    --gray-200: #d4cfc8;
+    --gray-400: #9e9890;
+    --gray-600: #6b6560;
+    --gray-800: #3d3a36;
+    --white: #ffffff;
+    --font-main: 'Nunito', sans-serif;
+    --font-head: 'Sora', sans-serif;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 18px;
+    --radius-xl: 24px;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.18);
+  }
+
+  body {
+    font-family: var(--font-main);
+    background: #e8e2d9;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 40px;
+    background-image: radial-gradient(circle at 20% 20%, #d4e8c7 0%, transparent 50%),
+                      radial-gradient(circle at 80% 80%, #f5e0c7 0%, transparent 50%);
+  }
+
+  .page-header { text-align: center; margin-bottom: 28px; }
+  .page-header h1 { font-family: var(--font-head); font-size: 28px; font-weight: 700; color: var(--green-800); letter-spacing: -0.5px; }
+  .page-header p { font-size: 14px; color: var(--gray-600); margin-top: 4px; }
+
+  .device-wrap { position: relative; width: 375px; max-width: 100%; }
+  .phone-frame {
+    width: 375px; max-width: 100%; min-height: 780px; height: 80vh;
+    background: var(--gray-50); border-radius: 44px;
+    box-shadow: 0 0 0 8px #2a2a2a, 0 0 0 10px #1a1a1a, var(--shadow-lg);
+    overflow: hidden; position: relative; display: flex; flex-direction: column;
+  }
+
+  .status-bar {
+    background: var(--green-800); color: white; display: flex;
+    justify-content: space-between; align-items: center;
+    padding: 10px 20px 6px; font-size: 12px; font-weight: 700; flex-shrink: 0;
+  }
+  .app-content { flex: 1; overflow-y: auto; overflow-x: hidden; scroll-behavior: smooth; background: var(--gray-50); }
+  .app-content::-webkit-scrollbar { display: none; }
+  .screen { display: none; flex-direction: column; min-height: 100%; }
+  .screen.active { display: flex; animation: fadeIn 0.2s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+  .top-bar { background: var(--green-800); padding: 14px 20px 18px; color: white; position: relative; flex-shrink: 0; }
+  .top-bar-simple { background: var(--green-800); padding: 14px 20px; color: white; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .top-bar-simple h2, .top-bar h2 { font-family: var(--font-head); font-weight: 700; }
+  .top-bar-simple h2 { font-size: 17px; }
+  .top-bar h2 { font-size: 20px; }
+  .top-bar .greeting { font-size: 13px; opacity: 0.8; margin-bottom: 2px; }
+  .top-bar .pig-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.18); border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 600; margin-top: 8px; }
+
+  /* Generic styles */
+  .section-title { font-size: 13px; font-weight: 700; color: var(--gray-600); letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 10px; margin-top: 4px; }
+  .back-btn { background: rgba(255,255,255,0.15); border: none; border-radius: 50%; width: 30px; height: 30px; color: white; font-size: 16px; cursor: pointer; }
+  
+  /* Bottom Nav */
+  .bottom-nav { background: white; border-top: 1px solid var(--gray-100); display: flex; padding-bottom: 4px; }
+  .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 8px 4px 4px; cursor: pointer; border: none; background: none; }
+  .nav-icon { font-size: 22px; line-height: 1; margin-bottom: 3px; }
+  .nav-label { font-size: 9px; font-weight: 700; color: var(--gray-400); }
+  .nav-item.active .nav-label { color: var(--green-600); }
+  .nav-item.active .nav-icon { transform: scale(1.12); }
+  .notif-badge { position: absolute; top: -4px; right: -4px; width: 16px; height: 16px; border-radius: 50%; background: var(--red-400); color: white; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+
+  /* Specific UI Rules... */
+  .card { background: white; border-radius: var(--radius-md); padding: 14px; box-shadow: var(--shadow-sm); border: 1px solid var(--gray-100); margin-bottom: 14px; }
+  .btn-primary { width: 100%; padding: 14px; background: var(--green-600); color: white; border: none; border-radius: var(--radius-md); font-size: 15px; font-weight: 700; cursor: pointer; }
+  .task-card { background: white; border-radius: var(--radius-md); padding: 14px 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; box-shadow: var(--shadow-sm); border: 1px solid var(--gray-100); cursor: pointer; }
+  .task-card .task-check { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--gray-200); display: flex; align-items: center; justify-content: center; font-size: 13px; }
+  .task-card .task-check.done { background: var(--green-400); border-color: var(--green-400); color: white; }
+
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 0 12px 16px; }
+  .cal-day { aspect-ratio: 1; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; cursor: pointer; }
+  .cal-day.done { background: var(--green-100); color: var(--green-800); }
+  .cal-day.today { background: var(--green-600); color: white; }
+  .cal-day.missed { background: var(--red-100); color: var(--red-600); }
+  .cal-day.locked { background: var(--gray-50); color: var(--gray-200); }
+
+  .check-item { background: white; border-radius: var(--radius-md); padding: 14px; margin-bottom: 6px; display: flex; align-items: center; gap: 12px; border: 1px solid var(--gray-100); cursor: pointer; }
+  .check-item.checked { border-color: var(--green-200); background: var(--green-50); }
+  .check-circle { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--gray-200); display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .check-item.checked .check-circle { background: var(--green-400); border-color: var(--green-400); color: white; }
+
+  .obs-option { flex: 1; padding: 10px; border-radius: var(--radius-sm); border: 2px solid var(--gray-100); text-align: center; cursor: pointer; font-size: 12px; font-weight: 600; color: var(--gray-600); margin: 0 4px; }
+  .obs-option.selected-normal { border-color: var(--green-400); background: var(--green-50); color: var(--green-700); }
+  .obs-option.selected-abnormal { border-color: var(--red-400); background: var(--red-100); color: var(--red-600); }
+
+  .input-field { width: 100%; border: 1px solid var(--gray-200); padding: 12px; border-radius: 8px; margin-top: 6px; margin-bottom: 12px; font-size: 16px; }
+
+  @media (max-width: 400px) { .phone-frame { border-radius: 32px; } }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>🐷 SwineTrack WebApp</h1>
+  <p>120-Day Finisher Management System</p>
+</div>
+
+<div class="device-wrap">
+<div class="phone-frame">
+  <div class="status-bar">
+    <span id="status-clock">9:41</span>
+    <span>📶 🔋</span>
+  </div>
+
+  <div class="app-content" id="app-content">
+
+    <!-- ═══ SETUP SCREEN ═══ -->
+    <div class="screen active" id="screen-setup">
+      <div class="top-bar"><h2>🐷 Welcome to SwineTrack</h2></div>
+      <div style="padding: 20px;">
+        <div class="card">
+          <p style="color: var(--gray-600); margin-bottom: 20px;">Let's configure your new pig for its 120-day finishing cycle.</p>
+          <label style="font-weight: 700; color: var(--gray-800);">Pig Name / Batch</label>
+          <input type="text" id="setup-name" class="input-field" placeholder="e.g. Bigas">
+          
+          <label style="font-weight: 700; color: var(--gray-800);">Number of Pigs</label>
+          <input type="number" id="setup-headcount" value="1" class="input-field">
+
+          <label style="font-weight: 700; color: var(--gray-800);">Initial Weight (kg) per pig</label>
+          <input type="number" id="setup-weight" value="60" class="input-field">
+          
+          <label style="font-weight: 700; color: var(--gray-800);">Start Date</label>
+          <input type="date" id="setup-date" class="input-field">
+
+          <button class="btn-primary" style="margin-top:20px;" onclick="initProfile()">Start Cycle</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ HOME SCREEN ═══ -->
+    <div class="screen" id="screen-home">
+      <div class="top-bar">
+        <div class="greeting">Magandang umaga! 👋</div>
+        <h2>SwineTrack</h2>
+        <div class="pig-badge" id="hub-pig-badge"></div>
+      </div>
+      <div style="padding: 16px;">
+        <div class="card" style="background: linear-gradient(135deg, var(--green-600), var(--green-400)); color: white; display: flex; justify-content: space-between;">
+          <div>
+            <div style="font-size: 52px; font-family: var(--font-head); font-weight: 800; line-height: 1;" id="hub-day-num">1</div>
+            <div style="font-size: 12px; opacity: 0.8;">Day of 120</div>
+            <div style="font-size: 13px; opacity: 0.8; margin-top:6px;" id="hub-days-left">119 days remaining</div>
+          </div>
+          <div style="font-size: 54px; line-height: 1;">🐷</div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
+          <div class="card" style="margin: 0; padding: 14px;">
+            <div style="font-size: 20px; margin-bottom: 6px;">⚖️</div>
+            <div style="font-size: 22px; font-weight: 800; font-family: var(--font-head); color: var(--gray-800);" id="hub-weight">-<span style="font-size:14px;font-weight:600;color:var(--gray-500);"> kg</span></div>
+            <div style="font-size: 11px; color: var(--gray-600); margin-top: 2px;">Current Weight</div>
+          </div>
+          <div class="card" style="margin: 0; padding: 14px;">
+            <div style="font-size: 20px; margin-bottom: 6px;">📈</div>
+            <div style="font-size: 22px; font-weight: 800; font-family: var(--font-head); color: var(--gray-800);" id="hub-adg">-<span style="font-size:13px;"> g/d</span></div>
+            <div style="font-size: 11px; color: var(--gray-600); margin-top: 2px;">Avg Daily Gain</div>
+          </div>
+        </div>
+
+        <div class="section-title">Today's Tasks</div>
+        
+        <div class="task-card" onclick="goTo('checklist')">
+          <div style="width:40px;height:40px;border-radius:12px;background:var(--green-50);display:flex;align-items:center;justify-content:center;font-size:20px;">🌾</div>
+          <div style="flex:1;">
+            <div style="font-size:14px;font-weight:700;">Feeding</div>
+            <div style="font-size:12px;color:var(--gray-600);" id="hub-feed-lbl">Morning & Afternoon</div>
+          </div>
+          <div class="task-check" id="hub-chk-feed"></div>
+        </div>
+        <div class="task-card" onclick="goTo('checklist')">
+          <div style="width:40px;height:40px;border-radius:12px;background:var(--amber-50);display:flex;align-items:center;justify-content:center;font-size:20px;">🧹</div>
+          <div style="flex:1;">
+            <div style="font-size:14px;font-weight:700;">Pen Cleaning</div>
+            <div style="font-size:12px;color:var(--gray-600);">Sweep & Sanitize</div>
+          </div>
+          <div class="task-check" id="hub-chk-clean"></div>
+        </div>
+        <div class="task-card" onclick="goTo('health')">
+          <div style="width:40px;height:40px;border-radius:12px;background:var(--blue-100);display:flex;align-items:center;justify-content:center;font-size:20px;">🩺</div>
+          <div style="flex:1;">
+            <div style="font-size:14px;font-weight:700;">Observation</div>
+            <div style="font-size:12px;color:var(--gray-600);">Behavior & Waste</div>
+          </div>
+          <div class="task-check" id="hub-chk-health"></div>
+        </div>
+
+        <div style="margin-top: 24px; display: flex; gap: 10px;">
+          <button class="btn-primary" style="flex:1; background: var(--blue-600); font-size:13px;" onclick="advanceDay()">Advance +1 Day</button>
+          <button class="btn-primary" style="flex:1; background: var(--red-600); font-size:13px;" onclick="resetData()">Reset Progress</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ CALENDAR SCREEN ═══ -->
+    <div class="screen" id="screen-calendar">
+      <div class="top-bar-simple"><h2>📅 120-Day Calendar</h2></div>
+      <div style="padding:16px;">
+        <div style="font-family:var(--font-head);font-size:18px;font-weight:700;margin-bottom:10px;">Cycle Progress</div>
+        <div class="cal-grid" id="cal-grid"></div>
+      </div>
+    </div>
+
+    <!-- ═══ CHECKLIST SCREEN ═══ -->
+    <div class="screen" id="screen-checklist">
+      <div class="top-bar-simple"><button class="back-btn" onclick="goTo('home')">←</button><h2>Daily Tasks</h2></div>
+      <div style="padding: 16px;">
+        <div class="check-item" id="ci-feed-am" onclick="toggleTask('feedAM')">
+          <div class="check-circle" id="cb-feedAM"></div>
+          <div style="flex:1;">
+            <div style="font-size:14px;font-weight:700;">Morning Feeding</div>
+            <div style="font-size:11px;color:var(--gray-600);" id="ch-lbl-am"></div>
+          </div>
+        </div>
+        <div class="check-item" id="ci-feed-pm" onclick="toggleTask('feedPM')">
+          <div class="check-circle" id="cb-feedPM"></div>
+          <div style="flex:1;">
+            <div style="font-size:14px;font-weight:700;">Afternoon Feeding</div>
+            <div style="font-size:11px;color:var(--gray-600);" id="ch-lbl-pm"></div>
+          </div>
+        </div>
+        <div class="check-item" id="ci-clean" onclick="toggleTask('clean')">
+          <div class="check-circle" id="cb-clean"></div>
+          <div style="flex:1;">
+            <div style="font-size:14px;font-weight:700;">Pen Cleaning</div>
+            <div style="font-size:11px;color:var(--gray-600);">Remove manure & check water</div>
+          </div>
+        </div>
+        <div class="check-item" id="ci-water" onclick="toggleTask('water')">
+          <div class="check-circle" id="cb-water"></div>
+          <div style="flex:1;">
+            <div style="font-size:14px;font-weight:700;">Refill water drinkers</div>
+            <div style="font-size:11px;color:var(--gray-600);">Ensure clean, fresh water at all times</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ FEEDING SCREEN ═══ -->
+    <div class="screen" id="screen-feeding">
+      <div class="top-bar-simple"><h2>🌾 Feeding Guide</h2></div>
+      <div style="padding: 16px;">
+        
+        <div class="section-title">Current Stage</div>
+        <div class="card" style="background:var(--green-50); border:1px solid var(--green-200);">
+          <div style="font-size:18px;font-weight:700;color:var(--green-800);" id="feed-stage-name">Mid Finisher 🐷</div>
+          <div style="font-size:13px;color:var(--gray-600);margin-top:4px;" id="feed-stage-summary">Weight: 72 kg · Target: 80–100 kg</div>
+          <div style="font-size:15px;font-weight:700;margin-top:10px;color:var(--gray-800);" id="feed-target">Daily Feed Allowance: 3.0 kg / day</div>
+          <div style="font-size:11px;color:var(--gray-500);margin-top:8px;">⚡ Based on current weight · Updated today</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+          <div class="card" style="margin:0;">
+            <div style="font-size:12px;color:var(--gray-500);font-weight:bold;margin-bottom:8px;">☀️ MORNING</div>
+            <div style="font-size:24px;font-weight:800;font-family:var(--font-head);color:var(--green-600);" id="feed-am">1.5</div>
+            <div style="font-size:12px;color:var(--gray-500);">kilograms · 6:00 AM</div>
+          </div>
+          <div class="card" style="margin:0;">
+            <div style="font-size:12px;color:var(--gray-500);font-weight:bold;margin-bottom:8px;">🌤️ AFTERNOON</div>
+            <div style="font-size:24px;font-weight:800;font-family:var(--font-head);color:var(--green-600);" id="feed-pm">1.5</div>
+            <div style="font-size:12px;color:var(--gray-500);">kilograms · 3:00 PM</div>
+          </div>
+        </div>
+
+        <div class="card" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="updateFeedPrice()">
+          <div>
+            <div style="font-size:12px;font-weight:bold;color:var(--gray-500);">Feed Price (per kg)</div>
+            <div style="font-size:20px;font-weight:700;font-family:var(--font-head);color:var(--gray-800);" id="feed-price-disp">₱ 22.50</div>
+            <div style="font-size:11px;color:var(--blue-400);margin-top:4px;">Tap to update feed price</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:12px;font-weight:bold;color:var(--gray-500);">Today's Feed Cost</div>
+            <div style="font-size:20px;font-weight:700;font-family:var(--font-head);color:var(--red-600);" id="feed-cost-total">₱ 67.50</div>
+            <div style="font-size:11px;color:var(--gray-500);margin-top:4px;" id="feed-cost-math">3.0 kg × ₱22.50</div>
+          </div>
+        </div>
+
+        <div class="section-title">Growth Stage Guide</div>
+        <div class="card" style="padding:0;overflow:hidden;">
+          <table style="width:100%;border-collapse:collapse;font-size:13px;text-align:left;">
+            <tr style="background:var(--gray-100);">
+              <th style="padding:10px;color:var(--gray-600);">Stage</th>
+              <th style="padding:10px;color:var(--gray-600);">Weight</th>
+              <th style="padding:10px;color:var(--gray-600);">Feed/pig/day</th>
+            </tr>
+            <tr style="border-bottom:1px solid var(--gray-100);" id="stage-row-early">
+              <td style="padding:10px;font-weight:700;color:var(--gray-800);">Early<span id="stage-arrow-early"></span></td>
+              <td style="padding:10px;color:var(--gray-600);">60–80 kg</td>
+              <td style="padding:10px;font-weight:700;color:var(--green-600);">2.5 kg</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--gray-100);" id="stage-row-mid">
+              <td style="padding:10px;font-weight:700;color:var(--gray-800);">Mid<span id="stage-arrow-mid"></span></td>
+              <td style="padding:10px;color:var(--gray-600);">80–100 kg</td>
+              <td style="padding:10px;font-weight:700;color:var(--green-600);">3.0 kg</td>
+            </tr>
+            <tr id="stage-row-late">
+              <td style="padding:10px;font-weight:700;color:var(--gray-800);">Late<span id="stage-arrow-late"></span></td>
+              <td style="padding:10px;color:var(--gray-600);">100–120 kg</td>
+              <td style="padding:10px;font-weight:700;color:var(--green-600);">3.2 kg</td>
+            </tr>
+          </table>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ═══ HEALTH SCREEN ═══ -->
+    <div class="screen" id="screen-health">
+      <div class="top-bar-simple"><h2>🩺 Health Observation</h2></div>
+      <div style="padding: 16px;">
+        <div style="font-size:14px;font-weight:700;color:var(--gray-600);margin-bottom:12px;" id="health-date-lbl">📋 Day 15 · April 15, 2026</div>
+
+        <div class="card" style="margin-bottom:12px;">
+          <div style="font-weight:700;margin-bottom:10px;">🐾 Behavior</div>
+          <div style="display:flex;gap:8px;">
+            <div class="obs-option" id="beh-normal" onclick="setHealth('behavior','normal')">
+              <div style="font-size:24px;margin-bottom:4px;">😊</div>Active & Alert
+            </div>
+            <div class="obs-option" id="beh-abnormal" onclick="setHealth('behavior','abnormal')">
+              <div style="font-size:24px;margin-bottom:4px;">😔</div>Lethargic
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:12px;">
+          <div style="font-weight:700;margin-bottom:10px;">🍽️ Appetite</div>
+          <div style="display:flex;gap:8px;">
+            <div class="obs-option" id="app-normal" onclick="setHealth('appetite','normal')">
+              <div style="font-size:24px;margin-bottom:4px;">😋</div>Eating Normally
+            </div>
+            <div class="obs-option" id="app-abnormal" onclick="setHealth('appetite','abnormal')">
+              <div style="font-size:24px;margin-bottom:4px;">😶</div>Reduced Appetite
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:12px;">
+          <div style="font-weight:700;margin-bottom:10px;">💩 Waste Condition</div>
+          <div style="display:flex;gap:8px;">
+            <div class="obs-option" id="was-normal" onclick="setHealth('waste','normal')">
+              <div style="font-size:24px;margin-bottom:4px;">✅</div>Normal
+            </div>
+            <div class="obs-option" id="was-abnormal" onclick="setHealth('waste','abnormal')">
+              <div style="font-size:24px;margin-bottom:4px;">⚠️</div>Loose / Watery
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="health-suggestion" style="display:none;background:var(--amber-50);border:1px solid var(--amber-200);">
+          <div style="display:flex;gap:12px;">
+            <div style="font-size:24px;">⚠️</div>
+            <div style="font-size:13px;color:var(--amber-800);line-height:1.4;" id="health-suggestion-text"></div>
+          </div>
+        </div>
+
+        <button class="btn-primary" style="margin-top:8px;" onclick="saveHealth()">Save Observations</button>
+      </div>
+    </div>
+
+    <!-- ═══ WEIGHT SCREEN ═══ -->
+    <div class="screen" id="screen-weight">
+      <div class="top-bar-simple"><h2>⚖️ Weight & Growth</h2></div>
+      <div style="padding: 16px;">
+        
+        <div class="section-title">This Week's ADG</div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:flex-end;">
+            <div>
+              <div style="font-size:28px;font-weight:800;font-family:var(--font-head);color:var(--gray-800);" id="adg-current">648 g/day</div>
+              <div style="font-size:13px;color:var(--gray-600);margin-top:4px;">Target: 600–700 g/day</div>
+            </div>
+            <div style="padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700;" id="adg-status">✅ On Track</div>
+          </div>
+          
+          <div style="margin-top:16px;">
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--gray-500);margin-bottom:4px;font-weight:700;">
+              <span>0 g</span><span>600</span><span>700</span><span>800 g+</span>
+            </div>
+            <div style="height:8px;background:var(--gray-100);border-radius:4px;position:relative;overflow:hidden;width:100%;">
+               <!-- Target Zone -->
+               <div style="position:absolute;left:75%;width:12.5%;height:100%;background:var(--green-200);opacity:0.6;"></div>
+               <!-- Marker -->
+               <div id="adg-bar" style="height:100%;background:var(--green-600);width:81%;border-radius:4px;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-title">Weight Progress</div>
+        <div class="card" style="padding:0;overflow:hidden;" id="weight-chart-container"></div>
+
+        <div class="section-title">Weigh-in History</div>
+        <div id="weight-list"></div>
+
+        <div style="height:16px;"></div>
+        <button class="btn-primary" style="background:var(--gray-800);color:white;display:flex;justify-content:center;align-items:center;gap:8px;" onclick="promptNewWeight()">
+          <span style="font-size:18px;">+</span> Record New Weight
+        </button>
+
+      </div>
+    </div>
+
+    <!-- ═══ EXPENSE SCREEN ═══ -->
+    <div class="screen" id="screen-expense">
+      <div class="top-bar-simple"><h2>💰 Expenses</h2></div>
+      <div style="padding: 16px;" id="expense-container">
+        
+        <div class="card" style="background: linear-gradient(135deg, var(--green-600), var(--green-400)); color:white;">
+          <div style="font-size:12px;opacity:0.8;text-transform:uppercase;">Projected Net Profit</div>
+          <div style="font-size:36px;font-weight:800;font-family:var(--font-head);" id="exp-profit">₱ 0</div>
+          <div style="font-size:12px;opacity:0.9;margin-top:4px;" id="exp-roi">ROI: 0% · Based on current market price</div>
+          
+          <div style="display:flex;justify-content:space-between;margin-top:20px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.2);">
+             <div>
+                <div style="font-size:10px;opacity:0.8;text-transform:uppercase;">Total Invested</div>
+                <div style="font-size:16px;font-weight:700;" id="exp-total">₱ 0</div>
+             </div>
+             <div style="text-align:right;">
+                <div style="font-size:10px;opacity:0.8;text-transform:uppercase;">Projected Revenue</div>
+                <div style="font-size:16px;font-weight:700;" id="exp-revenue">₱ 0</div>
+             </div>
+          </div>
+        </div>
+
+        <div class="section-title">Expense Breakdown</div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+             <div style="font-size:12px;font-weight:700;color:var(--gray-600);">By Category</div>
+             <div style="font-size:12px;color:var(--gray-500);" id="exp-breakdown-day">Day 1 of 120</div>
+          </div>
+          <div id="expense-breakdown-list"></div>
+        </div>
+
+        <div class="section-title">Add Entry</div>
+        <div class="card">
+          <select id="exp-cat" class="input-field" style="margin-bottom:8px;">
+            <option value="Feed">🌾 Feed</option>
+            <option value="Medicine">💊 Medicine</option>
+            <option value="Vitamins">🧪 Vitamins</option>
+            <option value="Others">📦 Others</option>
+          </select>
+          <input type="text" id="exp-desc" class="input-field" placeholder="Item Name (e.g. Finisher Sack)" style="margin-bottom:8px;">
+          <input type="number" id="exp-amt" class="input-field" placeholder="Amount (₱)" style="margin-bottom:12px;">
+          <button class="btn-primary" onclick="addExpense()">Add Record</button>
+        </div>
+
+        <div class="section-title">Recent Entries</div>
+        <div id="expense-list"></div>
+
+      </div>
+    </div>
+
+  </div><!-- end app-content -->
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <button class="nav-item active" id="nav-home" onclick="goTo('home')"><div class="nav-icon">🏠</div><div class="nav-label">Home</div></button>
+    <button class="nav-item" id="nav-calendar" onclick="goTo('calendar')"><div class="nav-icon">📅</div><div class="nav-label">Calendar</div></button>
+    <button class="nav-item" id="nav-feeding" onclick="goTo('feeding')"><div class="nav-icon">🌾</div><div class="nav-label">Feeding</div></button>
+    <button class="nav-item" id="nav-weight" onclick="goTo('weight')"><div class="nav-icon">⚖️</div><div class="nav-label">Weight</div></button>
+    <button class="nav-item" id="nav-expense" onclick="goTo('expense')"><div class="nav-icon">💰</div><div class="nav-label">Expense</div></button>
+  </div>
+
+</div>
+</div>
+
+<script>
+// ---------- STATE ----------
+const STORE_KEY = 'swinetrack_db_v2';
+let db = {
+  profile: null, // { name, startWeight, startDate }
+  currentDay: 1,
+  currentWeight: 0,
+  logs: {}, // { "1": { feedAM: true, feedPM: false, clean: false, healthRecorded: false } }
+  weighIns: [], // [{ day, weight, adg, date }]
+  expenses: [] // [{ date, cat, amount }]
+};
+
+function loadDB() {
+  const s = localStorage.getItem(STORE_KEY);
+  if(s) db = JSON.parse(s);
+}
+function saveDB() {
+  localStorage.setItem(STORE_KEY, JSON.stringify(db));
+}
+
+// ---------- HELPERS ----------
+function el(id) { return document.getElementById(id); }
+function _Date(d) { return new Date(d); }
+function getDayDiff() {
+  if(!db.profile) return 1;
+  const start = _Date(db.profile.startDate);
+  start.setHours(0,0,0,0);
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const diffTime = Math.abs(today - start);
+  let days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  if(days > 120) days = 120;
+  return days;
+}
+function getFeedRule(wt) {
+  const count = db.profile ? db.profile.headcount : 1;
+  let base = 3.2;
+  if (wt < 80) base = 2.5;
+  else if (wt < 100) base = 3.0;
+  return base * count;
+}
+
+// ---------- NAVIGATION ----------
+const screens = ['setup','home','calendar','checklist','feeding','health','weight','expense'];
+function goTo(name) {
+  screens.forEach(s => {
+    let scr = el('screen-'+s);
+    if(scr) scr.classList.remove('active');
+  });
+  el('screen-'+name).classList.add('active');
+  
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if(el('nav-'+name)) el('nav-'+name).classList.add('active');
+
+  if(name === 'home') renderHome();
+  if(name === 'calendar') renderCalendar();
+  if(name === 'feeding') renderFeeding();
+  if(name === 'weight') renderWeight();
+  if(name === 'expense') renderExpense();
+  if(name === 'checklist' || name === 'health') renderTasks();
+}
+
+// ---------- INITIALIZATION ----------
+function initProfile() {
+  const nm = el('setup-name').value || 'Pig';
+  const hc = parseInt(el('setup-headcount').value) || 1;
+  const wt = parseFloat(el('setup-weight').value);
+  const dt = el('setup-date').value;
+  if(!wt || !dt || hc < 1) return alert("Valid weight, headcount, and date required!");
+  
+  db.profile = { name: nm, headcount: hc, startWeight: wt, startDate: dt };
+  db.currentWeight = wt;
+  db.weighIns = [{ day: 1, weight: wt, adg: 0, date: dt }];
+  saveDB();
+  db.currentDay = getDayDiff();
+  goTo('home');
+}
+
+function boot() {
+  document.getElementById('setup-date').valueAsDate = new Date();
+  loadDB();
+  if(!db.profile) {
+    goTo('setup');
+    el('app-content').parentElement.querySelector('.bottom-nav').style.display = 'none';
+  } else {
+    db.currentDay = getDayDiff();
+    el('app-content').parentElement.querySelector('.bottom-nav').style.display = 'flex';
+    goTo('home');
+  }
+}
+
+// ---------- RENDERERS ----------
+function renderHome() {
+  const d = db.currentDay;
+  el('hub-day-num').innerText = d;
+  el('hub-days-left').innerText = (120 - d) + ' days remaining';
+  el('hub-pig-badge').innerText = `🐷 ${db.profile.name} · Day ${d}`;
+  el('hub-weight').innerHTML = `${db.currentWeight}<span style="font-size:14px;color:var(--gray-500);"> kg</span>`;
+  
+  const lastAdg = db.weighIns[db.weighIns.length-1].adg;
+  el('hub-adg').innerHTML = `${lastAdg}<span style="font-size:13px;"> g/d</span>`;
+
+  // Checklist updates
+  const log = db.logs[d] || {};
+  el('hub-chk-feed').className = (log.feedAM && log.feedPM) ? "task-check done" : "task-check";
+  el('hub-chk-feed').innerText = (log.feedAM && log.feedPM) ? "✓" : "";
+  
+  el('hub-chk-clean').className = log.clean ? "task-check done" : "task-check";
+  el('hub-chk-clean').innerText = log.clean ? "✓" : "";
+
+  el('hub-chk-health').className = log.healthRecorded ? "task-check done" : "task-check";
+  el('hub-chk-health').innerText = log.healthRecorded ? "✓" : "";
+}
+
+function renderCalendar() {
+  const grid = el('cal-grid');
+  grid.innerHTML = '';
+  for(let i=1; i<=120; i++) {
+    const d = document.createElement('div');
+    d.innerText = i;
+    const log = db.logs[i] || {};
+    const isDone = log.feedAM && log.feedPM && log.clean && log.water && log.healthRecorded;
+    
+    if (i === db.currentDay) d.className = 'cal-day today';
+    else if (i > db.currentDay) d.className = 'cal-day locked';
+    else if (isDone) d.className = 'cal-day done';
+    else d.className = 'cal-day missed';
+    
+    grid.appendChild(d);
+  }
+}
+
+function renderTasks() {
+  const d = db.currentDay;
+  const log = db.logs[d] || {};
+  
+  ['feedAM', 'feedPM', 'clean', 'water'].forEach(k => {
+    const isChk = log[k];
+    if(k==='feedAM') el('ci-feed-am').className = isChk ? "check-item checked" : "check-item";
+    if(k==='feedPM') el('ci-feed-pm').className = isChk ? "check-item checked" : "check-item";
+    if(k==='clean') el('ci-clean').className = isChk ? "check-item checked" : "check-item";
+    if(k==='water') el('ci-water').className = isChk ? "check-item checked" : "check-item";
+    
+    if(k==='feedAM') el('cb-feedAM').innerText = isChk ? '✓' : '';
+    if(k==='feedPM') el('cb-feedPM').innerText = isChk ? '✓' : '';
+    if(k==='clean') el('cb-clean').innerText = isChk ? '✓' : '';
+    if(k==='water') el('cb-water').innerText = isChk ? '✓' : '';
+  });
+
+  const rule = getFeedRule(db.currentWeight);
+  el('ch-lbl-am').innerText = `Give ${(rule/2).toFixed(2)} kg feed`;
+  el('ch-lbl-pm').innerText = `Give ${(rule/2).toFixed(2)} kg feed`;
+
+  // Health
+  document.querySelectorAll('.obs-option').forEach(n => { n.classList.remove('selected-normal'); n.classList.remove('selected-abnormal'); });
+  if(el('health-suggestion')) el('health-suggestion').style.display = 'none';
+  const dtStr = new Date().toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'});
+  if(el('health-date-lbl')) el('health-date-lbl').innerText = `📋 Day ${d} · ${dtStr}`;
+}
+
+function toggleTask(key) {
+  const d = db.currentDay;
+  if(!db.logs[d]) db.logs[d] = {};
+  db.logs[d][key] = !db.logs[d][key];
+  saveDB();
+  renderTasks();
+}
+
+function setHealth(cat, val) {
+  el(cat.substring(0,3)+'-normal').classList.remove('selected-normal');
+  el(cat.substring(0,3)+'-abnormal').classList.remove('selected-abnormal');
+  el(cat.substring(0,3)+'-'+val).classList.add(val==='normal'?'selected-normal':'selected-abnormal');
+
+  let warns = [];
+  if(el('beh-abnormal').classList.contains('selected-abnormal')) warns.push("Pig is lethargic. Check for signs of illness.");
+  if(el('app-abnormal').classList.contains('selected-abnormal')) warns.push("Reduced appetite detected. Monitor closely.");
+  if(el('was-abnormal').classList.contains('selected-abnormal')) warns.push("Possible diarrhea. Ensure clean water. Reduce feed slightly. Consult a vet if condition continues for more than 24 hours.");
+  
+  if(warns.length > 0) {
+    el('health-suggestion').style.display = 'block';
+    el('health-suggestion-text').innerHTML = warns.join("<br><br>");
+  } else {
+    el('health-suggestion').style.display = 'none';
+  }
+}
+function saveHealth() {
+  const d = db.currentDay;
+  if(!db.logs[d]) db.logs[d] = {};
+  db.logs[d].healthRecorded = true;
+  saveDB();
+  goTo('checklist');
+}
+
+function renderFeeding() {
+  const wt = db.currentWeight;
+  const count = db.profile ? db.profile.headcount : 1;
+  const feedPrice = db.feedPrice || 22.50;
+
+  let stageName = "Late Finisher";
+  let targetDesc = "100–120 kg";
+  let rowId = "stage-row-late";
+  let perPig = 3.2;
+
+  if (wt < 80) { stageName = "Early Finisher"; targetDesc = "60–80 kg"; rowId = "stage-row-early"; perPig = 2.5; }
+  else if (wt < 100) { stageName = "Mid Finisher"; targetDesc = "80–100 kg"; rowId = "stage-row-mid"; perPig = 3.0; }
+
+  const totalFeed = perPig * count;
+  const cost = totalFeed * feedPrice;
+
+  el('feed-stage-name').innerText = stageName + ' 🐷';
+  el('feed-stage-summary').innerText = 'Weight: ' + wt + ' kg · Target: ' + targetDesc;
+  el('feed-target').innerText = 'Daily Feed Allowance: ' + totalFeed.toFixed(2) + ' kg / day';
+  
+  el('feed-am').innerText = (totalFeed / 2).toFixed(2);
+  el('feed-pm').innerText = (totalFeed / 2).toFixed(2);
+
+  el('feed-price-disp').innerText = '₱ ' + feedPrice.toFixed(2);
+  el('feed-cost-total').innerText = '₱ ' + cost.toFixed(2);
+  el('feed-cost-math').innerText = totalFeed.toFixed(1) + ' kg × ₱' + feedPrice.toFixed(2);
+
+  ['stage-row-early', 'stage-row-mid', 'stage-row-late'].forEach(r => {
+     el(r).style.background = 'white';
+     el(r.replace('row','arrow')).innerText = ''; 
+  });
+  el(rowId).style.background = 'var(--green-50)';
+  el(rowId.replace('row','arrow')).innerText = ' ←';
+}
+
+function updateFeedPrice() {
+  let np = prompt('Enter Feed Price per kg (₱):', db.feedPrice || 22.50);
+  if (np && !isNaN(np)) {
+     db.feedPrice = parseFloat(np);
+     saveDB();
+     renderFeeding();
+  }
+}
+
+function renderWeight() {
+  const currentADG = db.weighIns[db.weighIns.length-1].adg;
+  el('adg-current').innerText = currentADG + ' g/day';
+  
+  let targetMin = 600;
+  if(currentADG >= targetMin || currentADG === 0) {
+     el('adg-status').innerText = currentADG === 0 ? '🕒 Baseline' : '✅ On Track';
+     el('adg-status').style.background = 'var(--green-100)';
+     el('adg-status').style.color = 'var(--green-800)';
+  } else {
+     el('adg-status').innerText = '⚠️ Needs Attention';
+     el('adg-status').style.background = 'var(--red-100)';
+     el('adg-status').style.color = 'var(--red-600)';
+  }
+  
+  let pct = Math.min((currentADG / 800) * 100, 100);
+  el('adg-bar').style.width = pct + '%';
+  el('adg-bar').style.background = currentADG >= targetMin ? 'var(--green-600)' : 'var(--amber-400)';
+
+  const wl = el('weight-list');
+  wl.innerHTML = '';
+  [...db.weighIns].reverse().forEach((w) => {
+    let adgHtml = w.adg > 0 ? `<small style="color:var(--green-600);font-weight:700;">+${w.adg} g/d</small>` : `<small style="color:var(--gray-500);">Baseline</small>`;
+    wl.innerHTML += `<div class="card" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:12px;">
+      <div><div style="font-weight:700;color:var(--gray-800);">Day ${w.day}</div><div style="font-size:11px;color:var(--gray-500);margin-top:2px;">${w.date}</div></div>
+      <div style="text-align:right"><div style="font-size:16px;font-weight:800;color:var(--gray-800);">${w.weight} kg</div>${adgHtml}</div>
+    </div>`;
+  });
+
+  const cw = el('weight-chart-container');
+  if(!cw) return;
+  let minW = 65, maxW = 80;
+  if (db.weighIns.length > 0) {
+     let wts = db.weighIns.map(w => w.weight);
+     minW = Math.floor(Math.min(...wts)/5)*5; 
+     maxW = Math.ceil(Math.max(...wts)/5)*5;
+     if(maxW <= minW) maxW = minW + 10;
+     if(maxW - minW < 15) maxW = minW + 15;
+  }
+  let slice = db.weighIns.slice(-7);
+  const chartH = 88, padX = 30, xStep = (300 - padX - 10) / Math.max(1, slice.length - 1);
+  let pts = [];
+  slice.forEach((w, i) => {
+     let x = padX + (i * xStep);
+     let pct = (w.weight - minW) / (maxW - minW);
+     let y = 108 - (pct * chartH);
+     pts.push({x, y, w: w.weight, d: w.day});
+  });
+  if(pts.length === 0) pts.push({x:padX, y:108, w:0, d:1});
+  
+  let pathD = `M ${padX} 108 ` + pts.map(p => `L ${p.x} ${p.y} `).join('') + `L ${pts[pts.length-1].x} 108 Z`;
+  let polylinePts = pts.map(p => `${p.x},${p.y}`).join(' ');
+  
+  let circles = '', xLabels = '';
+  pts.forEach((p, i) => {
+    let isLast = i === pts.length - 1;
+    circles += `<circle cx="${p.x}" cy="${p.y}" r="${isLast ? 5 : 4}" fill="${isLast ? 'white' : '#6ab04c'}" ${isLast ? 'stroke="#6ab04c" stroke-width="3"' : ''}></circle>`;
+    xLabels += `<text x="${p.x-6}" y="118" font-size="9" fill="#9e9890">D${p.d}</text>`;
+  });
+  
+  let yStep = (maxW - minW) / 3;
+  let yTexts = `
+    <text x="8" y="24" font-size="9" fill="#9e9890">${Math.round(maxW)}</text>
+    <text x="8" y="54" font-size="9" fill="#9e9890">${Math.round(minW + yStep*2)}</text>
+    <text x="8" y="84" font-size="9" fill="#9e9890">${Math.round(minW + yStep)}</text>
+    <text x="8" y="112" font-size="9" fill="#9e9890">${Math.round(minW)}</text>
+  `;
+
+  cw.innerHTML = `
+  <svg class="chart-svg" viewBox="0 0 300 120" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;">
+    <defs>
+      <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#6ab04c" stop-opacity="0.25"></stop>
+        <stop offset="100%" stop-color="#6ab04c" stop-opacity="0"></stop>
+      </linearGradient>
+    </defs>
+    <line x1="30" y1="20" x2="290" y2="20" stroke="#ede9e3" stroke-width="1"></line>
+    <line x1="30" y1="50" x2="290" y2="50" stroke="#ede9e3" stroke-width="1"></line>
+    <line x1="30" y1="80" x2="290" y2="80" stroke="#ede9e3" stroke-width="1"></line>
+    <line x1="30" y1="108" x2="290" y2="108" stroke="#ede9e3" stroke-width="1"></line>
+    ${yTexts}
+    <path d="${pathD}" fill="url(#chartGrad)"></path>
+    <polyline points="${polylinePts}" fill="none" stroke="#6ab04c" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"></polyline>
+    ${circles}
+    ${xLabels}
+  </svg>`;
+}
+
+function promptNewWeight() {
+  const wStr = prompt("Enter Current Weight (kg):");
+  if(!wStr) return;
+  const w = parseFloat(wStr);
+  if(!w) return alert("Invalid weight");
+  
+  const d = db.currentDay;
+  const last = db.weighIns[db.weighIns.length-1];
+  
+  let prev = last;
+  if (d === last.day && db.weighIns.length > 1) {
+    db.weighIns.pop(); // overwrite same day
+    prev = db.weighIns[db.weighIns.length-1];
+  }
+
+  const daysDiff = d - prev.day;
+  const adg = daysDiff > 0 ? ((w - prev.weight) / daysDiff)*1000 : 0;
+  
+  const dtStr = new Date().toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+  db.weighIns.push({ day: d, weight: w, adg: Math.round(adg), date: dtStr });
+  db.currentWeight = w;
+  saveDB();
+  renderWeight();
+}
+
+function renderExpense() {
+  let total = 0;
+  let breakdown = { "Feed": 0, "Medicine": 0, "Vitamins": 0, "Others": 0 };
+  
+  const elist = el('expense-list');
+  elist.innerHTML = '';
+  
+  [...db.expenses].reverse().forEach(e => {
+    total += e.amount;
+    let bKey = e.cat;
+    if(bKey === "Medicine & Vitamins") bKey = "Medicine"; 
+    if(!breakdown[bKey] && breakdown[bKey] !== 0) bKey = "Others";
+    breakdown[bKey] += e.amount;
+    
+    let emoji = "📦";
+    if(e.cat==="Feed") emoji = "🌾";
+    else if(e.cat==="Medicine" || e.cat==="Medicine & Vitamins") emoji = "💊";
+    else if(e.cat==="Vitamins") emoji = "🧪";
+    
+    let dtLabel = new Date(e.date).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+    if(dtLabel === "Invalid Date") dtLabel = e.date; 
+
+    elist.innerHTML += `<div class="card" style="display:flex;align-items:center;margin-bottom:8px;padding:12px;">
+      <div style="font-size:24px;margin-right:12px;">${emoji}</div>
+      <div style="flex:1;">
+         <div style="font-weight:700;color:var(--gray-800);">${e.desc || e.cat}</div>
+         <div style="font-size:11px;color:var(--gray-500);margin-top:2px;">${e.cat} · ${dtLabel}</div>
+      </div>
+      <div style="font-weight:800;color:var(--gray-800);">₱ ${e.amount.toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0})}</div>
+    </div>`;
+  });
+  
+  let avgSellPricePerKg = 150; 
+  let headcount = db.profile ? db.profile.headcount : 1;
+  let targetWt = 100;
+  
+  let projectedRev = headcount * targetWt * avgSellPricePerKg;
+  let profit = projectedRev - total;
+  let roi = total > 0 ? (profit / total) * 100 : 0;
+
+  el('exp-total').innerText = '₱ ' + total.toLocaleString();
+  el('exp-profit').innerText = profit > 0 ? '₱ ' + profit.toLocaleString() : '₱ 0';
+  el('exp-revenue').innerText = '₱ ' + projectedRev.toLocaleString();
+  el('exp-roi').innerText = `ROI: ${roi.toFixed(1)}% · Based on ₱${avgSellPricePerKg}/kg market price`;
+  
+  if(db.currentDay) el('exp-breakdown-day').innerText = `Day ${db.currentDay} of 120`;
+
+  const blist = el('expense-breakdown-list');
+  blist.innerHTML = '';
+  Object.keys(breakdown).forEach(k => {
+    let emoji = "📦";
+    if(k==="Feed") emoji = "🌾";
+    if(k==="Medicine") emoji = "💊";
+    if(k==="Vitamins") emoji = "🧪";
+    
+    blist.innerHTML += `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-100);">
+       <div style="font-weight:700;color:var(--gray-800);">${emoji} ${k}</div>
+       <div style="font-weight:700;color:var(--gray-600);">₱ ${breakdown[k].toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0})}</div>
+    </div>`;
+  });
+}
+
+function addExpense() {
+  const c = el('exp-cat').value;
+  const dRef = el('exp-desc') ? el('exp-desc').value : c;
+  const a = parseFloat(el('exp-amt').value);
+  if(!a) return;
+  db.expenses.push({ date: new Date().toISOString(), cat: c, desc: dRef, amount: a });
+  saveDB();
+  if(el('exp-desc')) el('exp-desc').value = '';
+  el('exp-amt').value = '';
+  renderExpense();
+}
+
+function advanceDay() {
+  if(!db.profile) return;
+  const d = _Date(db.profile.startDate);
+  d.setDate(d.getDate() - 1);
+  db.profile.startDate = d.toISOString().split('T')[0];
+  saveDB();
+  db.currentDay = getDayDiff();
+  goTo('home');
+}
+
+function resetData() {
+  if(confirm("Are you sure you want to delete all data and start over?")) {
+    localStorage.removeItem(STORE_KEY);
+    db = { profile: null, currentDay: 1, currentWeight: 0, logs: {}, weighIns: [], expenses: [] };
+    boot();
+  }
+}
+
+function updateClock() {
+  if(!el('status-clock')) return;
+  const now = new Date();
+  let h = now.getHours();
+  let m = now.getMinutes();
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12; h = h ? h : 12;
+  m = m < 10 ? '0'+m : m;
+  el('status-clock').innerText = h + ':' + m + ' ' + ampm;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// Initial Boot
+boot();
+</script>
+</body>
+</html>
